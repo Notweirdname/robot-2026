@@ -56,7 +56,9 @@ public class DriveSubsystem extends SubsystemBase {
   // Create MAXSwerveModules
 
   private final RotateAutoAlign autoAlign;
+  //public final ShooterIntake m_ShooterIntake;
   NetworkTable table;
+  boolean canLineUp = false;
 
   private final MAXSwerveModule m_frontLeft = new MAXSwerveModule(
       DriveConstants.kFrontLeftDrivingCanId,
@@ -102,21 +104,18 @@ public class DriveSubsystem extends SubsystemBase {
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
-  
+    pigeon.getAccelerationX();
     autoAlign = new RotateAutoAlign();
     table = NetworkTableInstance.getDefault().getTable("limelight-center");
 
-	  PPHolonomicDriveController driveController = new PPHolonomicDriveController(new PIDConstants(7.0, 0.0, 0.0), new PIDConstants(7.0, 0.0, 0.0));
+	  PPHolonomicDriveController driveController = new PPHolonomicDriveController(new PIDConstants(8.0, 0.0, 0.0), new PIDConstants(10, 0.0, 0.0));
     RobotConfig config;
 
     try {
       config = RobotConfig.fromGUISettings();
-    } catch (IOException e) {
+    } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("BAD SETTINGS FILE");
-    } catch (org.json.simple.parser.ParseException e) {
-      e.printStackTrace();
-      throw new RuntimeException("PARSING ERROR");
     }
 
     AutoBuilder.configure(
@@ -126,7 +125,13 @@ public class DriveSubsystem extends SubsystemBase {
       (speeds, feedforwards) -> driveRobotRelative(speeds), 
       driveController, 
       config,
-      () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+      () -> {
+        var alliance = DriverStation.getAlliance();
+        if(alliance.isPresent()){
+          return alliance.get() == DriverStation.Alliance.Red;
+        }
+        return false;
+      },
       this
     );
 
@@ -159,6 +164,7 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public void resetOdometry(Pose2d pose) {
+    System.out.println("Odometry Reset");
     m_odometry.resetPosition(
         Rotation2d.fromDegrees(pigeon.getRotation2d().getDegrees()),
         new SwerveModulePosition[] {
@@ -172,22 +178,20 @@ public class DriveSubsystem extends SubsystemBase {
 
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
     // Convert the commanded speeds into the correct units for the drivetrain
-    
-
 	XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
-	double rightTriggerValue = (m_driverController.getRightTriggerAxis() * -0.8) + 1.0;
+  double rightTriggerValue = (m_driverController.getRightTriggerAxis() * -0.8) + 1.0;
 
   double newRot = rot;
   NetworkTableEntry numberEntry = table.getEntry("tid");
   
   //Auto Align With April Tag
-  if(m_driverController.getRightBumperButton()){
-    if((double)numberEntry.getDouble(0.0) == 10 ||(double)numberEntry.getDouble(0.0) == 9){
+  if(m_driverController.getRightBumperButton() || m_driverController.getLeftBumperButton()){
+    if((double)numberEntry.getDouble(0.0) == 10 ||(double)numberEntry.getDouble(0.0) == 9 || (double)numberEntry.getDouble(0.0) == 8){
       newRot = autoAlign.getRotationSpeed();
     }else{
       newRot = rot;
     }
-  }else if(!m_driverController.getRightBumperButton()){
+  }else if(!m_driverController.getRightBumperButton() && !m_driverController.getLeftBumperButton()){
     newRot = rot;
   }
   
@@ -204,9 +208,9 @@ public class DriveSubsystem extends SubsystemBase {
 
   SmartDashboard.putNumber("rot", (double)newRot);
 
-	double xSpeedDelivered = xSpeed * DriveConstants.kMaxSpeedMetersPerSecond * -1.0;
-    double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond * -1.0;
-    double rotDelivered = newRot * DriveConstants.kMaxAngularSpeed * -1.0;
+	double xSpeedDelivered = xSpeed * DriveConstants.kMaxSpeedMetersPerSecond;
+    double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond ;
+    double rotDelivered = newRot * DriveConstants.kMaxAngularSpeed;
 
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
@@ -262,8 +266,23 @@ public class DriveSubsystem extends SubsystemBase {
     return kDriveKinematics.toChassisSpeeds(new SwerveModuleState[] {m_frontLeft.getState(), m_frontRight.getState(), m_rearLeft.getState(), m_rearRight.getState()});
   }
 
+  public void CanLineUp(boolean lineUp){
+    canLineUp = lineUp;
+  }
+
   void driveRobotRelative(ChassisSpeeds robotRelativeSpeeds){
     ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
+
+    PIDController rotationPID = new PIDController(5,  0.0, 0.0);
+    rotationPID.setTolerance(0.05);
+    rotationPID.setSetpoint(0.0);
+    double tx = LimelightHelpers.getTX("limelight-center");
+
+    if(canLineUp && (tx > 2 || tx < -2)){
+      double output = rotationPID.calculate(tx);
+      System.out.println("Auto Aligning Rotating: " + output);
+      targetSpeeds.omegaRadiansPerSecond = Math.toRadians(output);
+    }
     var targetStates = kDriveKinematics.toSwerveModuleStates(targetSpeeds);
     setModuleStates(targetStates);
   }

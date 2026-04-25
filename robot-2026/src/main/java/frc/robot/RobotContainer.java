@@ -21,8 +21,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.Lights;
 import frc.robot.subsystems.ShooterIntake;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -33,12 +36,15 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 public class RobotContainer extends SubsystemBase{
 
   private final DriveSubsystem m_drive = new DriveSubsystem();
-  private final ShooterIntake m_ShooterIntake = new ShooterIntake();
+  private Lights m_lights = new Lights();
 
   PathPlannerAuto Mario;
-  SendableChooser<Command> m_Chooser;
+  PathPlannerAuto Pacman;
+  PathPlannerAuto Pichu;
+  PathPlannerAuto DK;
+  PathPlannerAuto Yoshi;
 
-  //NamedCommands.registerCommand("Shoot", m_ShooterIntake.autoShoot());
+  SendableChooser<Command> m_Chooser;
 
   private final CommandXboxController m_driverController =
       new CommandXboxController(OIConstants.kDriverControllerPort);
@@ -51,35 +57,97 @@ public class RobotContainer extends SubsystemBase{
   }
 
   public Command shooterOff(){
-    return this.runOnce(() -> m_ShooterIntake.setShooterSpeed(0));
+    return this.runOnce(() -> m_lights.shooter.setShooterSpeed(0));
   }
 
   public Command shortShoot(){
-    return this.runOnce(() -> m_ShooterIntake.setShooterSpeed(ShooterIntakeConstants.kShootCloseSpeed));
+    return this.runOnce(() -> m_lights.shooter.setShooterSpeed(ShooterIntakeConstants.kShootCloseSpeed));
   }
 
   public Command farShoot(){
-    return this.runOnce(() -> m_ShooterIntake.setShooterSpeed(ShooterIntakeConstants.kShootFarSpeed));
+    return this.runOnce(() -> m_lights.shooter.setShooterSpeed(ShooterIntakeConstants.kShootFarSpeed));
   }
 
   public Command kickerOn(){
-    return this.runOnce(() -> m_ShooterIntake.setKickerSpeed(ShooterIntakeConstants.kKickerOnSpeed, ShooterIntakeConstants.kIndexerOnSpeed));
+    return this.runOnce(() -> m_lights.shooter.setKickerSpeed(ShooterIntakeConstants.kKickerOnSpeed, ShooterIntakeConstants.kIndexerOnSpeed));
   }
 
   public Command kickerOff(){
-    return this.runOnce(() -> m_ShooterIntake.setKickerSpeed(ShooterIntakeConstants.kKickerOffSpeed, ShooterIntakeConstants.kIndexerOffSpeed));
+    return this.runOnce(() -> m_lights.shooter.setKickerSpeed(ShooterIntakeConstants.kKickerOffSpeed, ShooterIntakeConstants.kIndexerOffSpeed));
   }
 
   public Command intakeUp(){
-    return this.runOnce(() -> m_ShooterIntake.setIntakeAngle(ShooterIntakeConstants.upAngle));
+    return this.runOnce(() -> m_lights.shooter.setIntakeAngle(ShooterIntakeConstants.upAngle));
   }
 
   public Command intakeDown(){
-    return this.runOnce(() -> m_ShooterIntake.setIntakeAngle(ShooterIntakeConstants.intakeAngle));
+    return this.runOnce(() -> m_lights.shooter.setIntakeAngle(ShooterIntakeConstants.intakeAngle));
   }
 
+  public Command intakeShoot(){
+    return this.runOnce(() -> m_lights.shooter.setIntakeAngle(ShooterIntakeConstants.shootIntakeAngle));
+  }
+
+  public Command canShoot(){
+    return this.runOnce(() -> m_lights.shooter.CanShoot(true));
+  }
+
+  public Command canLineUp(){
+    return this.runOnce(() -> m_drive.CanLineUp(true));
+  }
+  
+  public Command cantShoot(){
+    return this.runOnce(() -> m_lights.shooter.CanShoot(false));
+  }
+
+  public Command cantLineUp(){
+    return this.runOnce(() -> m_drive.CanLineUp(false));
+  }
+
+  public Command runIntake(){
+    return this.runOnce(() ->m_lights.shooter.setIntakeSpeed(0.9));
+  }
+
+  public Command stopIntake(){
+    return this.runOnce(() ->m_lights.shooter.setIntakeSpeed(0));
+  }
+
+  public Command reverseIntake(){
+    return this.runOnce(() ->m_lights.shooter.setIntakeSpeed(-0.9));
+  }
+
+  public Command shortShotAngle(){
+    return this.runOnce(() ->m_lights.shooter.setHoodAngle(ShooterIntakeConstants.kShootCloseAngle));
+  }
+
+  public Command farShotAngle(){
+    return this.runOnce(() ->m_lights.shooter.setHoodAngle(ShooterIntakeConstants.kShootFarAngle));
+  }
+
+  public Command feed(){
+    return this.runOnce(() ->m_lights.shooter.feed(-5500,205));
+  }
+
+
   public RobotContainer() {
-    // Configure the trigger bindings
+    NamedCommands.registerCommand("Short Shoot", shortShoot());
+
+    NamedCommands.registerCommand("Can Shoot", canShoot());
+    NamedCommands.registerCommand("Can Line Up", canLineUp());
+    NamedCommands.registerCommand("Can't Shoot", cantShoot());
+    NamedCommands.registerCommand("Can't Line Up", cantLineUp());
+
+    NamedCommands.registerCommand("Kicker On", kickerOn());
+    NamedCommands.registerCommand("Kicker Off", kickerOff());
+
+    NamedCommands.registerCommand("Intake Down", intakeDown());
+    NamedCommands.registerCommand("Run Intake", runIntake());
+    NamedCommands.registerCommand("Stop Intake", stopIntake());
+    NamedCommands.registerCommand("Intake Up", intakeUp());
+
+    NamedCommands.registerCommand("Intake Middle", intakeShoot());
+
+
     m_Chooser = new SendableChooser<Command>();
     configureBindings();
 
@@ -97,8 +165,24 @@ public class RobotContainer extends SubsystemBase{
     String Mario_Str = "Mario";
     Mario = new PathPlannerAuto(Mario_Str);
     m_Chooser.addOption(Mario_Str, Mario);
-    SmartDashboard.putData("Auto", m_Chooser);
 
+    String Pacman_Str = "Pacman";
+    Pacman = new PathPlannerAuto(Pacman_Str);
+    m_Chooser.addOption(Pacman_Str, Pacman);
+
+    String Pichu_Str = "Pichu";
+    Pichu = new PathPlannerAuto(Pichu_Str);
+    m_Chooser.addOption(Pichu_Str, Pichu);
+
+    String DK_Str = "Donkey Kong";
+    DK = new PathPlannerAuto(DK_Str);
+    m_Chooser.addOption(DK_Str, DK);
+
+    String Yoshi_Str = "Yoshi";
+    Yoshi = new PathPlannerAuto(Yoshi_Str);
+    m_Chooser.addOption(Yoshi_Str, Yoshi);
+
+    SmartDashboard.putData("Auto", m_Chooser);
   }
 
   /**
@@ -114,18 +198,26 @@ public class RobotContainer extends SubsystemBase{
     m_driverController.start().onTrue(zeroHeading());
 
     m_codriverController.rightBumper().onTrue(intakeDown());
-    m_codriverController.leftBumper().onTrue(intakeUp());
+    m_codriverController.leftBumper().onTrue(intakeUp()).onTrue(stopIntake()).onTrue(kickerOff());
+    m_codriverController.x().onTrue(runIntake());
+    m_codriverController.b().onTrue(stopIntake());
+    m_codriverController.povDown().whileTrue(reverseIntake()).onFalse(stopIntake());
+    m_codriverController.rightTrigger().onTrue(intakeShoot());
 
     m_codriverController.y().onTrue(kickerOn());
     m_codriverController.a().onTrue(kickerOff());
 
-    m_codriverController.povUp().onTrue(shooterOff());
-    //m_codriverController.b().onTrue(shortShoot());
-    //m_codriverController.x().onTrue(farShoot());
+    m_codriverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff());
+
+    m_driverController.b().onTrue(shortShoot()).onTrue(shortShotAngle());
+    m_driverController.x().onTrue(farShoot()).onTrue(farShotAngle());
+    m_driverController.y().onTrue(feed());
   }
 
 
   public Command getAutonomousCommand() {
+    //return new InstantCommand();
     return m_Chooser.getSelected();
+    //return new PathPlannerAuto("Mario");
   }
 }

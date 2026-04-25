@@ -2,6 +2,7 @@ package frc.robot;
 
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.FeedbackSensor;
@@ -20,7 +21,6 @@ public final class Configs {
             double drivingFactor = ModuleConstants.kWheelDiameterMeters * Math.PI
                     / ModuleConstants.kDrivingMotorReduction;
             double turningFactor = 2 * Math.PI;
-            double nomianalVoltage = 12.0;
             double drivingVelocityFeedForward = 1 / ModuleConstants.kDriveWheelFreeSpeedRps;
 
             drivingConfig
@@ -49,7 +49,7 @@ public final class Configs {
             turningConfig.closedLoop
                     .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                     // These are example gains you may need to them for your own robot!
-                    .pid(0.7, 0, 0)
+                    .pid(1, 0, 0)
                     .outputRange(-1, 1)
                     // Enable PID wrap around for the turning motor. This will allow the PID
                     // controller to go through 0 to get to the setpoint i.e. going from 350 degrees
@@ -61,13 +61,19 @@ public final class Configs {
     }
 
     public static final class ShooterIntakeConfig{
-        public static final SparkMaxConfig shooterConfig1 = new SparkMaxConfig();
-        public static final SparkMaxConfig shooterConfig2 = new SparkMaxConfig();
+        public static final SparkFlexConfig shooterConfig1 = new SparkFlexConfig();
+        public static final SparkFlexConfig shooterConfig2 = new SparkFlexConfig();
         public static final SparkMaxConfig slapDownConfig = new SparkMaxConfig();
         public static final SparkMaxConfig slapDown2Config = new SparkMaxConfig();
         public static final SparkMaxConfig hoodConfig = new SparkMaxConfig();
 
         static {
+                shooterConfig1
+                    .closedLoop
+                    .pid(0.0005, 0, 0)
+                    //.pid(0.0012, 0, 0)
+                    .outputRange(-1, 1)
+                    .positionWrappingEnabled(false);
                 shooterConfig2.follow(ShooterIntakeConstants.kShooter1CanID, true);
 
                 slapDownConfig
@@ -78,27 +84,15 @@ public final class Configs {
                 slapDownConfig
                     .idleMode(IdleMode.kBrake)
                     .smartCurrentLimit(60)
-                    .inverted(false);
+                    .inverted(true);
                 slapDownConfig
                     .closedLoop
                     .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
-                    .pid(0.001, 0, 0, ClosedLoopSlot.kSlot0)
-                    .outputRange(-0.3, 0.3)
+                    .pid(0.005, 0, 0, ClosedLoopSlot.kSlot0)
+                    .outputRange(-0.6, 0.6)
                     .positionWrappingEnabled(false);
-                // slapDown2Config.absoluteEncoder
-                //         .inverted(true)
-                //         .positionConversionFactor(360)
-                //         .velocityConversionFactor(6);
-                // slapDown2Config
-                //         .idleMode(IdleMode.kBrake)
-                //         .smartCurrentLimit(60)
-                //         .inverted(false);
-                // slapDown2Config.closedLoop
-                //         .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
-                //         .pid(.001, 0, 0)
-                //         .outputRange(-0.3, 0.3)
-                //         .positionWrappingEnabled(false);
                 slapDown2Config.follow(Constants.ShooterIntakeConstants.kSlapDownCanId, true);
+
                 hoodConfig
                     .absoluteEncoder
                     .inverted(false)
@@ -111,7 +105,7 @@ public final class Configs {
                 hoodConfig
                     .closedLoop
                     .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
-                    .pid(0.01, 0, 0, ClosedLoopSlot.kSlot0)
+                    .pid(0.005, 0, 0, ClosedLoopSlot.kSlot0)
                     .outputRange(-1, 1)
                     .positionWrappingEnabled(false);
         }

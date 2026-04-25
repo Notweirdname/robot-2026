@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.7612930011862398,
-        "y": 2.9644602609727166
+        "x": 3.57,
+        "y": 4.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.7612930011862398,
-        "y": 2.9644602609727166
+        "x": 3.3853262158956117,
+        "y": 6.224495848161329
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.0,
-        "y": 6.0
+        "x": 0.316,
+        "y": 5.489
       },
       "prevControl": {
-        "x": 3.0,
-        "y": 6.0
+        "x": 0.0037979444224898185,
+        "y": 5.489
       },
       "nextControl": null,
       "isLocked": false,
@@ -29,12 +29,26 @@
     }
   ],
   "rotationTargets": [],
-  "constraintZones": [],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.5669291338582597,
+      "maxWaypointRelativePos": 1,
+      "constraints": {
+        "maxVelocity": 0.5,
+        "maxAcceleration": 1.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 5.974,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -45,7 +59,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Mario",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

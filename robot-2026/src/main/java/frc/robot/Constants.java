@@ -52,11 +52,11 @@ public final class Constants {
     // 13T, or 14T. This changes the drive speed of the module (a pinion gear with
     // more teeth will result in a robot that drives faster).
     public static final double kDrivingMotorPinionTeeth1 = 14.0;
-    public static final double kDrivingMotorPinionTeeth2 = 28.0;
+    public static final double kDrivingMotorPinionTeeth2 = 32.0;
     public static final double kDrivingMotorPinionTeeth3 = 15.0;
-    public static final double kDrivenMotorPinionTeeth1 = 50.0;
-    public static final double kDrivenMotorPinionTeeth2 = 16.0;
-    public static final double kDrivenMotorPinionTeeth3 = 45.0;
+    public static final double kDrivenMotorPinionTeeth1 = 54.0;
+    public static final double kDrivenMotorPinionTeeth2 = 25.0;
+    public static final double kDrivenMotorPinionTeeth3 = 30.0;
     
     
 
@@ -77,11 +77,14 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
 	  public static final int kCoDriverControllerPort = 1;
     public static final int kPigeonIMUPort = 2;
-    public static final double kDriveDeadband = 0.05;  
+    public static final double kDriveDeadband = 0.05; 
+    
+    public static final int kLEDPort = 0;
+    public static final int kLEDLength = 36;
   }
 
   public static final class AutoConstants {
-    public static final double kMaxSpeedMetersPerSecond = 5.9;
+    public static final double kMaxSpeedMetersPerSecond = 5.974;
     public static final double kMaxAccelerationMetersPerSecondSquared = 3;
     public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
     public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
@@ -96,7 +99,7 @@ public final class Constants {
   }
 
   public static final class NeoMotorConstants {
-    public static final double kFreeSpeedRpm = 5676;
+    public static final double kFreeSpeedRpm = 5820;
   }
 
   public static final class VortexMotorConstants {
@@ -112,20 +115,27 @@ public final class Constants {
     public static final int kHoodCanID = 25;
     public static final int kSlapDown2CanID = 26;
     public static final int kIndexerCanID = 27;
+    public static final int kClimberCanID = 30;
 
-    public static final double kShootFarSpeed = -0.85;
-    public static final double kShootCloseSpeed = -0.55;
-    //public static final double kShootCloseSpeed = -0.02;
+    public static final double kShootFarSpeed = -4600;
+    public static final double kShootCloseSpeed = -4300;
+    public static final double kShootFarAngle = 207;
+    public static final double kShootCloseAngle = 30;
     public static final double kKickerOffSpeed = 0.0;
-    public static final double kKickerOnSpeed = 0.7;
-    public static final double kIndexerOnSpeed = 0.25;
+    public static final double kKickerOnSpeed = 1;
+    public static final double kIndexerOnSpeed = 0.9;
     public static final double kIndexerOffSpeed = 0.0;
 
 
-    public static final double intakeAngle = 315;
-    public static final double upAngle = 120;
+    public static final double intakeAngle = 29;
+    public static final double upAngle = 138;
+    public static final double shootIntakeAngle = 90;
 
-    public static final double kHoodAngleHigh = 206; //change value
-    public static final double kHoodAngleLow = 10; //change value
+    public static final double kHoodAngleHigh = 210; //change value
+    public static final double kHoodAngleLow = 17; //change value
+  }
+
+  public static final class ClimberConstants{
+    public static final int kClimberCanID = 30;
   }
 }

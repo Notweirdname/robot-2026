@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import java.util.ArrayList;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.NetworkTable;
@@ -21,16 +23,27 @@ public class RotateAutoAlign extends SubsystemBase {
   double cameraHeight;
   double tagHeight;
   double cameraAngle;
+  double lastTY;
+
+  ArrayList<Double> tys;
 
   /** Creates a new RotateAutoAlign. */
   public RotateAutoAlign() {
-    rotationPID = new PIDController(0.006 ,  0.0, 0.0);
+    rotationPID = new PIDController(0.025,  0.0, 0.0);
     table = NetworkTableInstance.getDefault().getTable("limelight-center");
     rotationPID.setTolerance(0.05);
     rotationPID.setSetpoint(0.0);
-    cameraHeight = 16;
+    cameraHeight = 16.5;
     tagHeight = 44.3;
-    cameraAngle = 30;
+    cameraAngle = 14;
+
+    tys = new ArrayList<Double>();
+
+    tys.add(0.0);
+    tys.add(0.0);
+    tys.add(0.0);
+    tys.add(0.0);
+    tys.add(0.0);
   }
 
   @Override
@@ -40,15 +53,29 @@ public class RotateAutoAlign extends SubsystemBase {
 
   public double getDistance(){
     double ty = LimelightHelpers.getTY("limelight-center");
-    double zDistance = (tagHeight-cameraHeight)/ Math.tan(Math.toRadians(cameraAngle + ty));
+
+    if(ty != 0){
+      lastTY = ty;
+    }
+
+    tys.remove(0);
+    tys.add(lastTY);
+
+    double total = 0;
+    for (double i : tys){
+      total += i;
+    }
+
+    double tyAverage = total/tys.size();
+    double zDistance = (tagHeight-cameraHeight)/ Math.tan(Math.toRadians(cameraAngle + tyAverage));
 
     return zDistance;
   }
   
   public double getRotationSpeed(){
     double tx = LimelightHelpers.getTX("limelight-center");
-    double[] positions;
-    positions = LimelightHelpers.getBotPose_TargetSpace("limelight-center");
+    //double[] positions;
+    //positions = LimelightHelpers.getBotPose_TargetSpace("limelight-center");
     double output = rotationPID.calculate(tx);
 
     SmartDashboard.putNumber("TX", tx);
