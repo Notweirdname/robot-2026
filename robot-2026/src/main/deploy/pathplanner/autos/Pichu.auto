@@ -111,12 +111,6 @@
           "data": {
             "name": "Intake Up"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Pichu - Leg 4"
-          }
         }
       ]
     }

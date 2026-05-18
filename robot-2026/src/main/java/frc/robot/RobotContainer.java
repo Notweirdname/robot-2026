@@ -43,6 +43,7 @@ public class RobotContainer extends SubsystemBase{
   PathPlannerAuto Pichu;
   PathPlannerAuto DK;
   PathPlannerAuto Yoshi;
+  PathPlannerAuto NewMario;
 
   SendableChooser<Command> m_Chooser;
 
@@ -105,7 +106,7 @@ public class RobotContainer extends SubsystemBase{
   }
 
   public Command runIntake(){
-    return this.runOnce(() ->m_lights.shooter.setIntakeSpeed(0.9));
+    return this.runOnce(() ->m_lights.shooter.setIntakeSpeed(0.75));
   }
 
   public Command stopIntake(){
@@ -113,7 +114,7 @@ public class RobotContainer extends SubsystemBase{
   }
 
   public Command reverseIntake(){
-    return this.runOnce(() ->m_lights.shooter.setIntakeSpeed(-0.9));
+    return this.runOnce(() ->m_lights.shooter.setIntakeSpeed(-0.75));
   }
 
   public Command shortShotAngle(){
@@ -125,12 +126,13 @@ public class RobotContainer extends SubsystemBase{
   }
 
   public Command feed(){
-    return this.runOnce(() ->m_lights.shooter.feed(-5500,205));
+    return this.runOnce(() ->m_lights.shooter.feed(-6000,205));
   }
 
 
   public RobotContainer() {
     NamedCommands.registerCommand("Short Shoot", shortShoot());
+    NamedCommands.registerCommand("Short Angle", shortShotAngle());
 
     NamedCommands.registerCommand("Can Shoot", canShoot());
     NamedCommands.registerCommand("Can Line Up", canLineUp());
@@ -166,9 +168,14 @@ public class RobotContainer extends SubsystemBase{
     Mario = new PathPlannerAuto(Mario_Str);
     m_Chooser.addOption(Mario_Str, Mario);
 
+    String NewMario_Str = "Mario New";
+    NewMario = new PathPlannerAuto(NewMario_Str);
+    m_Chooser.addOption(NewMario_Str, NewMario);
+    
+
     String Pacman_Str = "Pacman";
     Pacman = new PathPlannerAuto(Pacman_Str);
-    m_Chooser.addOption(Pacman_Str, Pacman);
+    //m_Chooser.addOption(Pacman_Str, Pacman);
 
     String Pichu_Str = "Pichu";
     Pichu = new PathPlannerAuto(Pichu_Str);
@@ -176,11 +183,11 @@ public class RobotContainer extends SubsystemBase{
 
     String DK_Str = "Donkey Kong";
     DK = new PathPlannerAuto(DK_Str);
-    m_Chooser.addOption(DK_Str, DK);
+    //m_Chooser.addOption(DK_Str, DK);
 
     String Yoshi_Str = "Yoshi";
     Yoshi = new PathPlannerAuto(Yoshi_Str);
-    m_Chooser.addOption(Yoshi_Str, Yoshi);
+    //m_Chooser.addOption(Yoshi_Str, Yoshi);
 
     SmartDashboard.putData("Auto", m_Chooser);
   }
@@ -208,6 +215,7 @@ public class RobotContainer extends SubsystemBase{
     m_codriverController.a().onTrue(kickerOff());
 
     m_codriverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff());
+    m_driverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff());
 
     m_driverController.b().onTrue(shortShoot()).onTrue(shortShotAngle());
     m_driverController.x().onTrue(farShoot()).onTrue(farShotAngle());

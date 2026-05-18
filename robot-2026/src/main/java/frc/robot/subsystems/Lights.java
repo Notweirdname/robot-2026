@@ -48,6 +48,7 @@ public class Lights extends SubsystemBase {
 
   @Override
   public void periodic() {
+    SmartDashboard.putNumber("Match Time", getMatchTime());
     // This method will be called once per scheduler run
     /*if(isActive(DriverStation.getAlliance().get()) && getCurrentShift().get() != Shift.ENDGAME){
         if(autoAlign.getRotationSpeed() == 0.0){
@@ -154,10 +155,10 @@ public class Lights extends SubsystemBase {
   public static double getMatchTime(){
     if(DriverStation.isAutonomous()){
       if(DriverStation.getMatchTime() < 0) return DriverStation.getMatchTime();
-      return 20 - DriverStation.getMatchTime();
+      return DriverStation.getMatchTime();
     }else if(DriverStation.isTeleop()){
       if(DriverStation.getMatchTime() < 0) return DriverStation.getMatchTime();
-      return 160 - DriverStation.getMatchTime();
+      return DriverStation.getMatchTime();
     }
     return -1;
   }
