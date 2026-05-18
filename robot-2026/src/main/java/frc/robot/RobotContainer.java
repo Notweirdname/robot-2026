@@ -162,27 +162,7 @@ public class RobotContainer extends SubsystemBase{
                 true),
             m_drive));
 
-    String Mario_Str = "Mario";
-    Mario = new PathPlannerAuto(Mario_Str);
-    m_Chooser.addOption(Mario_Str, Mario);
-
-    String Pacman_Str = "Pacman";
-    Pacman = new PathPlannerAuto(Pacman_Str);
-    m_Chooser.addOption(Pacman_Str, Pacman);
-
-    String Pichu_Str = "Pichu";
-    Pichu = new PathPlannerAuto(Pichu_Str);
-    m_Chooser.addOption(Pichu_Str, Pichu);
-
-    String DK_Str = "Donkey Kong";
-    DK = new PathPlannerAuto(DK_Str);
-    m_Chooser.addOption(DK_Str, DK);
-
-    String Yoshi_Str = "Yoshi";
-    Yoshi = new PathPlannerAuto(Yoshi_Str);
-    m_Chooser.addOption(Yoshi_Str, Yoshi);
-
-    SmartDashboard.putData("Auto", m_Chooser);
+    
   }
 
   /**
