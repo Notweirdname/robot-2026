@@ -49,6 +49,7 @@ public class ShooterIntake extends SubsystemBase {
   double indexerSpeed;
 
   boolean canShoot;
+  boolean toggle;
 
   double t;
   double voy;
@@ -83,7 +84,7 @@ public class ShooterIntake extends SubsystemBase {
       m_shootController = m_shootMotor1.getClosedLoopController();
 
       shootSpeed = 0.0;
-      kickerSpeed = ShooterIntakeConstants.kKickerOffSpeed;
+      kickerSpeed = 0.0;
       intakeSpeed = 0.0;
       indexerSpeed = 0.0;
       hoodAngle = 40.0;
@@ -91,6 +92,8 @@ public class ShooterIntake extends SubsystemBase {
       H = -6.0; //Change in height
       h = H + 8 - LLHeight; //Max arc height
       g = 32.2; //Gravity
+      toggle = false;
+      canShoot = false;
       m_shootMotor1.configure(Configs.ShooterIntakeConfig.shooterConfig1, 
                            SparkBase.ResetMode.kResetSafeParameters, 
                            SparkBase.PersistMode.kPersistParameters);
@@ -141,7 +144,7 @@ public class ShooterIntake extends SubsystemBase {
     SmartDashboard.putNumber("Shoot Speed", motorSpeed);
     SmartDashboard.putNumber("Actual Shoot Speed", actualVo);
 
-      if(m_driverController.getRightBumperButton() || canShoot){
+      if(/*m_driverController.getRightBumperButton() ||*/ canShoot){
         System.out.println("Auto Align Shooting");
         if(launchAngle > ShooterIntakeConstants.kHoodAngleHigh){
           m_hoodClosedLoopController.setSetpoint(ShooterIntakeConstants.kHoodAngleHigh, ControlType.kPosition, ClosedLoopSlot.kSlot0);
@@ -158,16 +161,22 @@ public class ShooterIntake extends SubsystemBase {
           m_hoodClosedLoopController.setSetpoint(hoodAngle, ControlType.kPosition, ClosedLoopSlot.kSlot0);
         }
         m_shootController.setSetpoint(shootSpeed, ControlType.kVelocity);
+        m_kickerMotor.set(-kickerSpeed);
+        m_indexerMotor.set(-indexerSpeed);
+        m_slapClosedLoopController.setSetpoint(intakeAngle, ControlType.kPosition, ClosedLoopSlot.kSlot0);
       }
-    m_kickerMotor.set(-kickerSpeed);
-    m_indexerMotor.set(-indexerSpeed);
-    m_slapClosedLoopController.setSetpoint(intakeAngle, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+    //m_kickerMotor.set(-kickerSpeed);
+    //m_indexerMotor.set(-indexerSpeed);
+    if(toggle){
+      setIntakeSpeed(0.75);
+    }else if(!toggle){
+      setIntakeSpeed(0);
+    }
     if(intakeAngle == ShooterIntakeConstants.upAngle){
       //m_kickerMotor.set(0);
       m_indexerMotor.set(0);
       setIntakeSpeed(0);
     }
-
     SmartDashboard.putBoolean("Intaking", checkIntake());
     SmartDashboard.putBoolean("Kicking", checkKicker());
   }
@@ -180,7 +189,7 @@ public class ShooterIntake extends SubsystemBase {
     if(motorSpeed != 0){
       return motorSpeed;
     }else{
-      return shootSpeed;
+      return shootSpeed; 
     }
   }
 
@@ -211,6 +220,10 @@ public class ShooterIntake extends SubsystemBase {
 
   public void setIntakeAngle(double angle){
     intakeAngle = angle;
+  }
+
+  public void toggle(){
+    toggle = !toggle;
   }
 
   public void setHoodAngle(double angle){

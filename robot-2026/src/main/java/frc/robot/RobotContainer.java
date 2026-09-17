@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 //import frc.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -44,6 +45,7 @@ public class RobotContainer extends SubsystemBase{
   PathPlannerAuto DK;
   PathPlannerAuto Yoshi;
   PathPlannerAuto NewMario;
+  PathPlannerAuto newAuto;
 
   SendableChooser<Command> m_Chooser;
 
@@ -65,12 +67,17 @@ public class RobotContainer extends SubsystemBase{
     return this.runOnce(() -> m_lights.shooter.setShooterSpeed(ShooterIntakeConstants.kShootCloseSpeed));
   }
 
+
   public Command farShoot(){
     return this.runOnce(() -> m_lights.shooter.setShooterSpeed(ShooterIntakeConstants.kShootFarSpeed));
   }
 
   public Command kickerOn(){
     return this.runOnce(() -> m_lights.shooter.setKickerSpeed(ShooterIntakeConstants.kKickerOnSpeed, ShooterIntakeConstants.kIndexerOnSpeed));
+  }
+
+  public Command kickon(){
+    return Commands.sequence(Commands.waitSeconds(1), kickerOn());
   }
 
   public Command kickerOff(){
@@ -87,6 +94,10 @@ public class RobotContainer extends SubsystemBase{
 
   public Command intakeShoot(){
     return this.runOnce(() -> m_lights.shooter.setIntakeAngle(ShooterIntakeConstants.shootIntakeAngle));
+  }
+
+  public Command upAndDown(){
+    return Commands.sequence(intakeShoot(), Commands.waitSeconds(0.2), intakeDown(), Commands.waitSeconds(0.5)).repeatedly();
   }
 
   public Command canShoot(){
@@ -125,8 +136,8 @@ public class RobotContainer extends SubsystemBase{
     return this.runOnce(() ->m_lights.shooter.setHoodAngle(ShooterIntakeConstants.kShootFarAngle));
   }
 
-  public Command feed(){
-    return this.runOnce(() ->m_lights.shooter.feed(-6000,205));
+  public Command toggle(){
+    return this.runOnce(() ->m_lights.shooter.toggle());
   }
 
 
@@ -168,6 +179,10 @@ public class RobotContainer extends SubsystemBase{
     Mario = new PathPlannerAuto(Mario_Str);
     m_Chooser.addOption(Mario_Str, Mario);
 
+    String New_auto = "New Auto";
+    newAuto = new PathPlannerAuto(New_auto);
+    m_Chooser.addOption(New_auto, newAuto);
+
     String NewMario_Str = "Mario New";
     NewMario = new PathPlannerAuto(NewMario_Str);
     m_Chooser.addOption(NewMario_Str, NewMario);
@@ -204,22 +219,21 @@ public class RobotContainer extends SubsystemBase{
   private void configureBindings() {
     m_driverController.start().onTrue(zeroHeading());
 
-    m_codriverController.rightBumper().onTrue(intakeDown());
-    m_codriverController.leftBumper().onTrue(intakeUp()).onTrue(stopIntake()).onTrue(kickerOff());
-    m_codriverController.x().onTrue(runIntake());
-    m_codriverController.b().onTrue(stopIntake());
-    m_codriverController.povDown().whileTrue(reverseIntake()).onFalse(stopIntake());
-    m_codriverController.rightTrigger().onTrue(intakeShoot());
+    //m_codriverController.leftBumper().onTrue(intakeUp()).onTrue(stopIntake()).onTrue(kickerOff());
+    m_driverController.x().onTrue(toggle());
+    m_driverController.y().onTrue(intakeUp()).onTrue(stopIntake()).onTrue(kickerOff());
+    m_driverController.b().whileTrue(upAndDown());
+    m_driverController.a().onTrue(intakeDown());
 
-    m_codriverController.y().onTrue(kickerOn());
-    m_codriverController.a().onTrue(kickerOff());
+    //m_codriverController.y().onTrue(kickerOn());
+    //m_codriverController.a().onTrue(kickerOff());
 
-    m_codriverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff());
-    m_driverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff());
+    //m_codriverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff()).onTrue(kickerOff());
+    m_driverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff()).onTrue(kickerOff());
+    m_driverController.povDown().whileTrue(reverseIntake()).onFalse(stopIntake());
 
-    m_driverController.b().onTrue(shortShoot()).onTrue(shortShotAngle());
-    m_driverController.x().onTrue(farShoot()).onTrue(farShotAngle());
-    m_driverController.y().onTrue(feed());
+    m_driverController.leftBumper().whileTrue(shortShoot()).onTrue(shortShotAngle()).whileTrue(kickon()).onFalse(shooterOff()).onFalse(kickerOff());
+    m_driverController.leftTrigger().whileTrue(farShoot()).onTrue(farShotAngle()).whileTrue(kickon()).onFalse(shooterOff()).onFalse(kickerOff());
   }
 
 

@@ -185,13 +185,13 @@ public class DriveSubsystem extends SubsystemBase {
   NetworkTableEntry numberEntry = table.getEntry("tid");
   
   //Auto Align With April Tag
-  if(m_driverController.getRightBumperButton() || m_driverController.getLeftBumperButton()){
+  if(m_driverController.getRightBumperButton()){
     if((double)numberEntry.getDouble(0.0) == 10 ||(double)numberEntry.getDouble(0.0) == 9 || (double)numberEntry.getDouble(0.0) == 8){
       newRot = autoAlign.getRotationSpeed();
     }else{
       newRot = rot;
     }
-  }else if(!m_driverController.getRightBumperButton() && !m_driverController.getLeftBumperButton()){
+  }else if(!m_driverController.getRightBumperButton()){
     newRot = rot;
   }
   
