@@ -14,6 +14,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 
 public class RotateAutoAlign extends SubsystemBase {
 
@@ -27,12 +29,15 @@ public class RotateAutoAlign extends SubsystemBase {
 
   ArrayList<Double> tys;
 
+  private final Field2d m_field = new Field2d();
+
   /** Creates a new RotateAutoAlign. */
   public RotateAutoAlign() {
-    rotationPID = new PIDController(0.025,  0.0, 0.0);
+    LimelightHelpers.setPipelineIndex("limelight", 1);
+    rotationPID = new PIDController(0.025, 0.0, 0.0);
     table = NetworkTableInstance.getDefault().getTable("limelight-center");
     rotationPID.setTolerance(0.05);
-    rotationPID.setSetpoint(0.0);
+    rotationPID.setSetpoint(0);
     cameraHeight = 16.5;
     tagHeight = 44.3;
     cameraAngle = 14;
@@ -44,11 +49,26 @@ public class RotateAutoAlign extends SubsystemBase {
     tys.add(0.0);
     tys.add(0.0);
     tys.add(0.0);
+
+    SmartDashboard.putData("Field", m_field);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    LimelightHelpers.PoseEstimate mt1Result = 
+    LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-center");
+
+    if(mt1Result.tagCount > 0){
+      Pose2d robotPose = mt1Result.pose;
+
+      m_field.setRobotPose(robotPose);
+
+      m_field.getObject("MegaTag1_Pose").setPose(robotPose);
+
+      SmartDashboard.putNumber("MT1_X", robotPose.getX());
+      SmartDashboard.putNumber("MT1_Y", robotPose.getY());
+    }
   }
 
   public double getDistance(){

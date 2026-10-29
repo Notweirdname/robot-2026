@@ -117,9 +117,9 @@ public final class Constants {
     public static final int kIndexerCanID = 27;
     public static final int kClimberCanID = 30;
 
-    public static final double kShootFarSpeed = -4600;
+    public static final double kShootFarSpeed = -4750;
     public static final double kShootCloseSpeed = -4300;
-    public static final double kShootFarAngle = 207;
+    public static final double kShootFarAngle = 170;
     public static final double kShootCloseAngle = 30;
     public static final double kKickerOffSpeed = 0.0;
     public static final double kKickerOnSpeed = 1;

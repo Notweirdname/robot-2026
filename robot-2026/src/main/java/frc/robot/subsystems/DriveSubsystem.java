@@ -7,8 +7,9 @@ package frc.robot.subsystems;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
-import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -20,24 +21,12 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.SerialPort.Port;
-import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj.*;
 
-import static edu.wpi.first.units.Units.Rotation;
-import static edu.wpi.first.units.Units.Second;
-
-import java.io.IOException;
-import java.text.ParseException;
-
-import com.ctre.phoenix6.StatusSignal;
 //import com.ctre.phoenix.sensors.PigeonIMU;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -45,10 +34,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.controllers.PathFollowingController;
-
-import edu.wpi.first.math.controller.PIDController;
-import com.pathplanner.lib.config.PIDConstants;
 
 
 
@@ -56,6 +41,7 @@ public class DriveSubsystem extends SubsystemBase {
   // Create MAXSwerveModules
 
   private final RotateAutoAlign autoAlign;
+  private final SwerveDrivePoseEstimator m_PoseEstimator;
   //public final ShooterIntake m_ShooterIntake;
   NetworkTable table;
   boolean canLineUp = false;
@@ -92,7 +78,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(pigeon.getRotation2d().getDegrees()),
+      pigeon.getRotation2d(),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
@@ -104,10 +90,21 @@ public class DriveSubsystem extends SubsystemBase {
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
+    LimelightHelpers.setPipelineIndex("limelight", 1);
     pigeon.getAccelerationX();
     autoAlign = new RotateAutoAlign();
     table = NetworkTableInstance.getDefault().getTable("limelight-center");
 
+  m_PoseEstimator = new SwerveDrivePoseEstimator(
+    kDriveKinematics,
+    pigeon.getRotation2d(),
+    getModulePositions(),
+    new Pose2d(),
+    // 1. State standard deviations (X, Y, theta). Lower numbers = trust wheels MORE.
+    VecBuilder.fill(0.1, 0.1, 0.1), 
+    // 2. Vision standard deviations (X, Y, theta). Lower numbers = trust Limelight MORE.
+    VecBuilder.fill(0.9, 0.9, 0.9)  
+  );
 	  PPHolonomicDriveController driveController = new PPHolonomicDriveController(new PIDConstants(8.0, 0.0, 0.0), new PIDConstants(10, 0.0, 0.0));
     RobotConfig config;
 
@@ -126,10 +123,6 @@ public class DriveSubsystem extends SubsystemBase {
       driveController, 
       config,
       () -> {
-        var alliance = DriverStation.getAlliance();
-        if(alliance.isPresent()){
-          return alliance.get() == DriverStation.Alliance.Red;
-        }
         return false;
       },
       this
@@ -143,13 +136,19 @@ public class DriveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 
+  m_PoseEstimator.update(pigeon.getRotation2d(), getModulePositions());
+  LimelightHelpers.PoseEstimate mt1Result = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-center");
+  if (mt1Result.tagCount > 0) {
+        // mt1Result.timestampSeconds automatically corrects for the camera's processing lag
+        m_PoseEstimator.addVisionMeasurement(mt1Result.pose, mt1Result.timestampSeconds);
+    }
+
   SmartDashboard.putNumber("Yaw", pigeon.getYaw().getValueAsDouble());
 	SmartDashboard.putNumber("Pitch", pigeon.getPitch().getValueAsDouble());
 	SmartDashboard.putNumber("Roll", pigeon.getRoll().getValueAsDouble());
-
     
     m_odometry.update(
-        Rotation2d.fromDegrees(pigeon.getRotation2d().getDegrees()),
+        pigeon.getRotation2d(),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -159,14 +158,19 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
 
-  public Pose2d getPose() {
+  /*public Pose2d getPose() {
     return m_odometry.getPoseMeters();
-  }
+  }*/
+
+  public Pose2d getPose() {
+    return m_PoseEstimator.getEstimatedPosition();
+}
 
   public void resetOdometry(Pose2d pose) {
     System.out.println("Odometry Reset");
+    pigeon.setYaw(pose.getRotation().getDegrees()); 
     m_odometry.resetPosition(
-        Rotation2d.fromDegrees(pigeon.getRotation2d().getDegrees()),
+        pose.getRotation(),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -185,13 +189,13 @@ public class DriveSubsystem extends SubsystemBase {
   NetworkTableEntry numberEntry = table.getEntry("tid");
   
   //Auto Align With April Tag
-  if(m_driverController.getRightBumperButton()){
+  if(m_driverController.getLeftTriggerAxis() > 0 || m_driverController.getLeftBumperButton() || canLineUp){
     if((double)numberEntry.getDouble(0.0) == 10 ||(double)numberEntry.getDouble(0.0) == 9 || (double)numberEntry.getDouble(0.0) == 8){
       newRot = autoAlign.getRotationSpeed();
     }else{
       newRot = rot;
     }
-  }else if(!m_driverController.getRightBumperButton()){
+  }else if(m_driverController.getLeftTriggerAxis() == 0 && !m_driverController.getLeftBumperButton() && !canLineUp){
     newRot = rot;
   }
   
@@ -215,7 +219,7 @@ public class DriveSubsystem extends SubsystemBase {
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
             ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                Rotation2d.fromRadians(pigeon.getRotation2d().getRadians()))
+                getPose().getRotation())
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
     SwerveDriveKinematics.desaturateWheelSpeeds(
         swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
@@ -250,12 +254,13 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public void zeroHeading() {
+    System.out.println("ZERO");
     pigeon.reset();
     resetEncoders();
   }
 
   public double getHeading() {
-    return Rotation2d.fromDegrees(pigeon.getRotation2d().getDegrees()).getDegrees();
+    return pigeon.getRotation2d().getDegrees();
   } 
 
   public double getTurnRate() {
@@ -286,4 +291,13 @@ public class DriveSubsystem extends SubsystemBase {
     var targetStates = kDriveKinematics.toSwerveModuleStates(targetSpeeds);
     setModuleStates(targetStates);
   }
+
+  public SwerveModulePosition[] getModulePositions() {
+    return new SwerveModulePosition[] {
+        m_frontLeft.getPosition(),  // Element 0: Front Left
+        m_frontRight.getPosition(), // Element 1: Front Right
+        m_rearLeft.getPosition(),   // Element 2: Back Left
+        m_rearRight.getPosition()   // Element 3: Back Right
+    };
+}
 }

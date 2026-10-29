@@ -4,10 +4,13 @@
   "holonomicMode": true,
   "pathFolders": [
     "Mario",
-    "Pichu",
-    "Pacman"
+    "Bad",
+    "Pacman",
+    "Pichu"
   ],
-  "autoFolders": [],
+  "autoFolders": [
+    "Bad"
+  ],
   "defaultMaxVel": 5.974,
   "defaultMaxAccel": 5.0,
   "defaultMaxAngVel": 540.0,

@@ -46,6 +46,7 @@ public class RobotContainer extends SubsystemBase{
   PathPlannerAuto Yoshi;
   PathPlannerAuto NewMario;
   PathPlannerAuto newAuto;
+  PathPlannerAuto simpleAuto;
 
   SendableChooser<Command> m_Chooser;
 
@@ -100,6 +101,16 @@ public class RobotContainer extends SubsystemBase{
     return Commands.sequence(intakeShoot(), Commands.waitSeconds(0.2), intakeDown(), Commands.waitSeconds(0.5)).repeatedly();
   }
 
+  public Command shootSetup(){
+    return Commands.sequence(Commands.waitSeconds(1.5), kickerOn(), Commands.waitSeconds(1), upAndDown());
+  }
+
+  public Command shootAuto(){
+    return Commands.sequence(farShoot(), farShotAngle(), Commands.waitSeconds(1.5), 
+                              kickerOn(), Commands.waitSeconds(6), 
+                              shooterOff(), kickerOff(), intakeDown());
+  }
+
   public Command canShoot(){
     return this.runOnce(() -> m_lights.shooter.CanShoot(true));
   }
@@ -140,6 +151,10 @@ public class RobotContainer extends SubsystemBase{
     return this.runOnce(() ->m_lights.shooter.toggle());
   }
 
+  public Command stopShoot(){
+    return this.runOnce(() -> m_lights.shooter.setShooterSpeed(0));
+  }
+
 
   public RobotContainer() {
     NamedCommands.registerCommand("Short Shoot", shortShoot());
@@ -159,6 +174,12 @@ public class RobotContainer extends SubsystemBase{
     NamedCommands.registerCommand("Intake Up", intakeUp());
 
     NamedCommands.registerCommand("Intake Middle", intakeShoot());
+    NamedCommands.registerCommand("Toggle", toggle());
+
+    NamedCommands.registerCommand("Far Shoot", farShoot());
+    NamedCommands.registerCommand("Far Angle", farShotAngle());
+    NamedCommands.registerCommand("Shoot Auto", shootAuto());
+    NamedCommands.registerCommand("Stop Shooting", stopShoot());
 
 
     m_Chooser = new SendableChooser<Command>();
@@ -177,15 +198,11 @@ public class RobotContainer extends SubsystemBase{
 
     String Mario_Str = "Mario";
     Mario = new PathPlannerAuto(Mario_Str);
-    m_Chooser.addOption(Mario_Str, Mario);
-
-    String New_auto = "New Auto";
-    newAuto = new PathPlannerAuto(New_auto);
-    m_Chooser.addOption(New_auto, newAuto);
+    //m_Chooser.addOption(Mario_Str, Mario);
 
     String NewMario_Str = "Mario New";
     NewMario = new PathPlannerAuto(NewMario_Str);
-    m_Chooser.addOption(NewMario_Str, NewMario);
+    //m_Chooser.addOption(NewMario_Str, NewMario);
     
 
     String Pacman_Str = "Pacman";
@@ -194,7 +211,7 @@ public class RobotContainer extends SubsystemBase{
 
     String Pichu_Str = "Pichu";
     Pichu = new PathPlannerAuto(Pichu_Str);
-    m_Chooser.addOption(Pichu_Str, Pichu);
+    //m_Chooser.addOption(Pichu_Str, Pichu);
 
     String DK_Str = "Donkey Kong";
     DK = new PathPlannerAuto(DK_Str);
@@ -203,6 +220,14 @@ public class RobotContainer extends SubsystemBase{
     String Yoshi_Str = "Yoshi";
     Yoshi = new PathPlannerAuto(Yoshi_Str);
     //m_Chooser.addOption(Yoshi_Str, Yoshi);
+
+    String newAuto_Str = "Auto";
+    newAuto = new PathPlannerAuto(newAuto_Str);
+    m_Chooser.addOption(newAuto_Str, newAuto);
+
+    String simpleAuto_Str = "Simple Auto";
+    simpleAuto = new PathPlannerAuto(simpleAuto_Str);
+    m_Chooser.addOption(simpleAuto_Str, simpleAuto);
 
     SmartDashboard.putData("Auto", m_Chooser);
   }
@@ -222,18 +247,18 @@ public class RobotContainer extends SubsystemBase{
     //m_codriverController.leftBumper().onTrue(intakeUp()).onTrue(stopIntake()).onTrue(kickerOff());
     m_driverController.x().onTrue(toggle());
     m_driverController.y().onTrue(intakeUp()).onTrue(stopIntake()).onTrue(kickerOff());
-    m_driverController.b().whileTrue(upAndDown());
+    m_driverController.b().whileTrue(intakeShoot());
     m_driverController.a().onTrue(intakeDown());
 
     //m_codriverController.y().onTrue(kickerOn());
     //m_codriverController.a().onTrue(kickerOff());
 
     //m_codriverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff()).onTrue(kickerOff());
-    m_driverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff()).onTrue(kickerOff());
+    m_driverController.povUp().onTrue(cantShoot()).onTrue(cantLineUp()).onTrue(shooterOff()).onTrue(kickerOff()).onTrue(intakeDown());
     m_driverController.povDown().whileTrue(reverseIntake()).onFalse(stopIntake());
 
-    m_driverController.leftBumper().whileTrue(shortShoot()).onTrue(shortShotAngle()).whileTrue(kickon()).onFalse(shooterOff()).onFalse(kickerOff());
-    m_driverController.leftTrigger().whileTrue(farShoot()).onTrue(farShotAngle()).whileTrue(kickon()).onFalse(shooterOff()).onFalse(kickerOff());
+    m_driverController.leftBumper().whileTrue(shortShoot()).onTrue(shortShotAngle()).whileTrue(shootSetup()).onFalse(shooterOff()).onFalse(kickerOff()).onFalse(intakeDown()).onFalse(cantLineUp());
+    m_driverController.leftTrigger().whileTrue(farShoot()).onTrue(farShotAngle()).whileTrue(shootSetup()).onFalse(shooterOff()).onFalse(kickerOff()).onFalse(intakeDown()).onFalse(cantLineUp());
   }
 
 

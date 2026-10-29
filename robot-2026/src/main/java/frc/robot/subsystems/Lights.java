@@ -61,23 +61,29 @@ public class Lights extends SubsystemBase {
           }
         }
     }*/if((DriverStation.isTeleopEnabled() || DriverStation.isAutonomousEnabled())){
-        if(((autoAlign.getRotationSpeed() < 0.05) && (autoAlign.getRotationSpeed() > -0.05)) && m_driverController.rightBumper().getAsBoolean()){
-          if(shooter.getCurrentShooterVelocity() < (shooter.getSetShooterSpeed() + 1200) && shooter.getCurrentShooterVelocity() > (shooter.getSetShooterSpeed() + 1000) && shooter.getSetShooterSpeed() != 0.0){
-            for (int i = 0; i < OIConstants.kLEDLength; i++){
-              m_buffer.setRGB(i, 0, 255,0);
+        if(shooter.toggle){
+          for (int i = 0; i < OIConstants.kLEDLength; i++){
+              m_buffer.setRGB(i, 255, 0,255);
             }
-          }else{
-            for (int i = 0; i < OIConstants.kLEDLength; i++){
-              m_buffer.setRGB(i, 255, 0, 0);
+        }else{
+          if(((autoAlign.getRotationSpeed() < 0.1) && (autoAlign.getRotationSpeed() > -0.1)) && (m_driverController.leftBumper().getAsBoolean() || m_driverController.leftTrigger().getAsBoolean())){
+            if(shooter.getCurrentShooterVelocity() < (shooter.getSetShooterSpeed() + 1200) && shooter.getCurrentShooterVelocity() > (shooter.getSetShooterSpeed() + 1000) && shooter.getSetShooterSpeed() != 0.0){
+              for (int i = 0; i < OIConstants.kLEDLength; i++){
+                m_buffer.setRGB(i, 0, 255,0);
+              }
+            }else{
+              for (int i = 0; i < OIConstants.kLEDLength; i++){
+                m_buffer.setRGB(i, 255, 0, 0);
+              }
             }
+        }else if(!((autoAlign.getRotationSpeed() < 0.1) && (autoAlign.getRotationSpeed() > -0.1)) && (m_driverController.leftBumper().getAsBoolean() || m_driverController.leftTrigger().getAsBoolean())){
+          for (int i = 0; i < OIConstants.kLEDLength; i++){
+            m_buffer.setRGB(i, 255, 0, 0);
           }
-      }else if(!((autoAlign.getRotationSpeed() < 0.05) && (autoAlign.getRotationSpeed() > -0.05)) && m_driverController.rightBumper().getAsBoolean()){
-        for (int i = 0; i < OIConstants.kLEDLength; i++){
-          m_buffer.setRGB(i, 255, 0, 0);
-        }
-      }else if(!m_driverController.rightBumper().getAsBoolean()){
-        for (int i = 0; i < OIConstants.kLEDLength; i++){
-          m_buffer.setRGB(i, 252, 186, 3);
+        }else if(!m_driverController.leftBumper().getAsBoolean() && !m_driverController.leftTrigger().getAsBoolean()){
+          for (int i = 0; i < OIConstants.kLEDLength; i++){
+            m_buffer.setRGB(i, 252, 186, 3);
+          }
         }
       }
     }else if(!(DriverStation.isTeleopEnabled() || DriverStation.isAutonomousEnabled())){

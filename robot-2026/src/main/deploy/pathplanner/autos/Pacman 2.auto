@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Pacman - Start"
+            "pathName": "Auto - Start"
           }
         },
         {
@@ -128,6 +128,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Bad",
   "choreoAuto": false
 }

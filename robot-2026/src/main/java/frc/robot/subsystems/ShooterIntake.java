@@ -169,7 +169,7 @@ public class ShooterIntake extends SubsystemBase {
     //m_indexerMotor.set(-indexerSpeed);
     if(toggle){
       setIntakeSpeed(0.75);
-    }else if(!toggle){
+    }else if(!toggle && intakeSpeed != -0.75){
       setIntakeSpeed(0);
     }
     if(intakeAngle == ShooterIntakeConstants.upAngle){
@@ -245,6 +245,9 @@ public class ShooterIntake extends SubsystemBase {
   public void setIntakeSpeed(double speed){
     System.out.println(speed);
     intakeSpeed = speed;
+    if(speed == -0.75){
+      toggle = false;
+    }
     m_intakeMotor.set(speed);
   }
 
